@@ -13,8 +13,8 @@ import pygame as p
 
 ## Part 0b: Initializing Board
 board = np.array([
-    ['xx', 'xx', 'xx', 'yP', 'yP', 'yP', 'yP', 'yP', 'yP', 'yP', 'yP', 'xx', 'xx', 'xx'],
     ['xx', 'xx', 'xx', 'yR', 'yN', 'yB', 'yQ', 'yK', 'yB', 'yN', 'yR', 'xx', 'xx', 'xx'],
+    ['xx', 'xx', 'xx', 'yP', 'yP', 'yP', 'yP', 'yP', 'yP', 'yP', 'yP', 'xx', 'xx', 'xx'],
     ['xx', 'xx', 'xx', '--', '--', '--', '--', '--', '--', '--', '--', 'xx', 'xx', 'xx'],
 
     ['bR', 'bP', '--', '--', '--', '--', '--', '--', '--', '--', '--', '--', 'gP', 'gR'],
@@ -37,7 +37,7 @@ moveLog = []
 ## Part 1: Pygame
 p.init()
 dimension = 14 # dimensions = 14x14
-sq_size = 67
+sq_size = 50
 width = height = sq_size*dimension
 max_fps = 15
 
@@ -64,11 +64,11 @@ def load_images():
 
 
 ## Part 2: Main Driver
+bg = "#3C3A36"
 def main():
     screen = p.display.set_mode((width, height))
     clock = p.time.Clock()
-#3C3A36
-    screen.fill(p.Color(#3C3A36))
+    screen.fill(p.Color(bg))
     images = load_images()
     running = True
     while running:
@@ -77,16 +77,16 @@ def main():
                 # p.display.quit()
                 running = False
 
-        draw_game_state(screen, board)
+        draw_game_state(screen, board, images)
         clock.tick(max_fps)
         p.display.flip()
 
-def draw_game_state(screen, board):
+def draw_game_state(screen, board, images):
     '''
     Responsible for all the graphics on the current gamestate
     '''
     draw_board(screen) # draw squares on board
-    draw_pieces(screen, board) # draw pieces on top of those squares
+    draw_pieces(screen, board, images) # draw pieces on top of those squares
 
 def draw_board(screen):
     colors = [p.Color("white"), p.Color("gray")]
@@ -97,12 +97,20 @@ def draw_board(screen):
                 p.draw.rect(screen, color, 
                             p.Rect((col*sq_size, row*sq_size, sq_size, sq_size)))
             else:
-                p.draw.rect(screen, p.Color("black"),
+                p.draw.rect(screen, p.Color(bg),
                     p.Rect((col*sq_size, row*sq_size, sq_size, sq_size)))
 
 
-def draw_pieces(screen, board):
-    pass
+def draw_pieces(screen, board, images):
+    for row in range(dimension):
+        for col in range(dimension):
+            piece = board[row, col]
+
+            if piece != '--' and piece != 'xx':
+                screen.blit(images[piece],
+                            p.Rect(col*sq_size, row*sq_size, sq_size, sq_size))
+
+
 
 if __name__ == "__main__":
     main()
