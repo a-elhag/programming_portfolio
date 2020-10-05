@@ -1,15 +1,14 @@
-## Part 0: Importing
 import numpy as np
-import pygame as p
+import pygame
+import main
+import moves
 
-class chessBoard():
+class ChessBoard():
 
     '''
-    This class is responsible for storing all the information about the current state of a chess game. 
-    It will also be responsible for determining the valid moves at the current state. 
-    It will also keep a move log
+    This class is responsible for storing all the information about the current state
+    of a chess game. 
     '''
-
 
     def __init__(self):
         self.board = np.array([
@@ -29,15 +28,20 @@ class chessBoard():
             ['xx', 'xx', 'xx', '--', '--', '--', '--', '--', '--', '--', '--', 'xx', 'xx', 'xx'],
             ['xx', 'xx', 'xx', 'rP', 'rP', 'rP', 'rP', 'rP', 'rP', 'rP', 'rP', 'xx', 'xx', 'xx'],
             ['xx', 'xx', 'xx', 'rR', 'rN', 'rB', 'rQ', 'rK', 'rB', 'rN', 'rR', 'xx', 'xx', 'xx']])
-
-        self.redToMove = True
-        self.moveLog = []
-
+        
         self.dimension = 14
         self.sq_size = 50
         self.width = self.height = self.sq_size * self.dimension
         self.max_fps = 15
         self.bg = "#3C3A36"
+
+        self.highlight_color = {
+            "r": 'Red',
+            "b": 'Blue',
+            "y": 'Yellow',
+            "g": 'Green'
+        }
+        self.load_images()
 
 
     def load_images(self):
@@ -55,21 +59,43 @@ class chessBoard():
                 piece_label = color+piece
                 piece_loc = folder_loc + piece_label + ".png"
 
-                self.images[piece_label] = p.transform.scale(
-                    p.image.load(piece_loc), (self.sq_size, self.sq_size))
+                self.images[piece_label] = pygame.transform.scale(
+                    pygame.image.load(piece_loc), (self.sq_size, self.sq_size))
 
 
     def draw_board(self, screen):
-        colors = [p.Color("white"), p.Color("gray")]
+        colors = [pygame.Color("white"), pygame.Color("gray")]
         for row in range(self.dimension):
             for col in range(self.dimension):
+                # Draw real squares
                 if self.board[row, col] != 'xx':
                     color = colors[((row + col) % 2)]
-                    p.draw.rect(screen, color, 
-                                p.Rect((col*self.sq_size, row*self.sq_size, self.sq_size, self.sq_size)))
+                    pygame.draw.rect(screen, color, 
+                                pygame.Rect((col*self.sq_size, row*self.sq_size, self.sq_size, self.sq_size)))
+
+                # Draw squares that are not playable
                 else:
-                    p.draw.rect(screen, p.Color(self.bg),
-                        p.Rect((col*self.sq_size, row*self.sq_size, self.sq_size, self.sq_size)))
+                    pygame.draw.rect(screen, pygame.Color(self.bg),
+                        pygame.Rect((col*self.sq_size, row*self.sq_size, self.sq_size, self.sq_size)))
+
+
+    def draw_highlights(self, screen, sq_selected, turn, moves_ava):
+
+        if sq_selected != ():
+            row, col = sq_selected
+            if self.board[row, col][0] == turn:
+                # Highlight selected square
+                s = pygame.Surface((self.sq_size, self.sq_size))
+                s.set_alpha(90) # 0 transparent; 255 opaque
+                s.fill(pygame.Color(self.highlight_color[turn]))
+                screen.blit(s, (col*self.sq_size, row*self.sq_size))
+
+                s.set_alpha(40) # 0 transparent; 255 opaque
+                s.fill(pygame.Color(self.highlight_color[turn]))
+                for move in moves_ava:
+                    if move[0] == list(sq_selected):
+                        screen.blit(s, (move[1][1]*self.sq_size,
+                                        move[1][0]*self.sq_size))
 
 
     def draw_pieces(self, screen):
@@ -79,27 +105,17 @@ class chessBoard():
 
                 if piece != '--' and piece != 'xx':
                     screen.blit(self.images[piece],
-                                p.Rect(col*self.sq_size, row*self.sq_size, self.sq_size, self.sq_size))
+                                pygame.Rect(col*self.sq_size, row*self.sq_size, self.sq_size, self.sq_size))
 
+    def draw_all(self, screen, sq_selected, turn, moves_ava):
+        self.draw_board(screen)
+        self.draw_highlights(screen, sq_selected, turn, moves_ava)
+        self.draw_pieces(screen)
 
-def main():
-    A = chessBoard()
-    A.load_images()
-    screen = p.display.set_mode((A.width, A.height))
-    clock = p.time.Clock()
-    screen.fill(p.Color(A.bg))
-    running = True
-    while running:
-        for e in p.event.get():
-            if e.type == p.QUIT:
-                # p.display.quit()
-                running = False
-
-        A.draw_board(screen)
-        A.draw_pieces(screen)
-        clock.tick(A.max_fps)
-        p.display.flip()
 
 if __name__ == "__main__":
-    main()
-    p.display.quit()
+    chess_board = moves.Moves()
+    main.run_game(chess_board)
+    pygame.display.quit()
+
+
